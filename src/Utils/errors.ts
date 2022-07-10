@@ -1,16 +1,5 @@
-import errors from './error-messages';
-
-export interface BotErrorResponse {
-    [key: string]: unknown
-    code: number
-    message?: string
-}
-
-export interface BotErrorMessage {
-  code: number
-  message: string
-}
-
+import errors from '../Types/error-messages';
+import { BotErrorMessage, BotErrorResponse} from '../Types/error'
 export class BotError<T = unknown> extends Error {
   
     public readonly code: number
