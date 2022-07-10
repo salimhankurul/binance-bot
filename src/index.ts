@@ -1,5 +1,5 @@
-import TinyBot from './Bots/TinyBot';
-import SplitterBot from './Bots/SplitterBot';
+import TinyBot from './ExampleBots/TinyBot';
+import SplitterBot from './ExampleBots/SplitterBot';
 
 (async () => {
   
@@ -44,7 +44,7 @@ import SplitterBot from './Bots/SplitterBot';
 //const order = await mybot.place_limit_order(
 //   Types.LimitOrder.Sell,
 //   bal1.available,
-//   ticker.bidPrice * 1.1
+//   ticker.bidPrice * 1.1 s
 // );
 
 // if (!order) return;
