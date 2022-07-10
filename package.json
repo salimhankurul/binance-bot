@@ -1,0 +1,17 @@
+{
+  "name": "secret-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -b && ts-node index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-binance-api": "^0.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.33"
+  }
+}
