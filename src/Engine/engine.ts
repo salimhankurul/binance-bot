@@ -7,8 +7,11 @@ import {
   LimitOrderType,
   LimitOrderInput,
   EngineInitParams,
+  EngineResponse
 } from "./types";
 import { handlePression } from "./utils"
+import { logger } from './logger'
+import { BotError } from './errors'
 import { APIKEY, APISECRET } from '../env'
 
 const Binance = require("node-binance-api");
@@ -84,85 +87,96 @@ export class Order {
 }
 
 export class Engine {
-  symbol: string;
-  symbols: EngineSymbols;
-  pressions: EnginePressions;
+  symbol: string
+  symbols: EngineSymbols
+  pressions: EnginePressions
 
   constructor(params: EngineInitParams) {
-    this.symbol = params.symbols.first + params.symbols.second;
-    this.symbols = params.symbols;
-    this.pressions = params.pressions;
+    this.symbol = params.symbols.first + params.symbols.second
+    this.symbols = params.symbols
+    this.pressions = params.pressions
   }
 
   pression(_qty: number, _price: number): EnginePressions {
     return {
       quantity: handlePression(_qty, this.pressions.quantity),
       price: handlePression(_price, this.pressions.price),
-    };
+    }
   }
 
   async minBuyQty(price: number): Promise<number> {
-    return 10 / price;
+    return 10 / price
   }
 
   async maxBuyQty(price: number, bal: number): Promise<number> {
-    return bal / price;
+    return bal / price
   }
 
   async balance(symbol: string): Promise<Balance> {
-    const data = await binance.balance();
-    const target = data[symbol];
+    const data = await binance.balance()
+    const target = data[symbol]
     return {
       symbol: symbol,
       available: parseFloat(target.available),
       onOrder: parseFloat(target.onOrder),
-    };
+    }
   }
 
   async getPrice(): Promise<number> {
-    const data = await binance.prices(this.symbol);
-    return parseFloat(data[this.symbol]);
+    const data = await binance.prices(this.symbol)
+    return parseFloat(data[this.symbol])
   }
 
   async getTickers(): Promise<Ticker> {
-    const data = await binance.bookTickers(this.symbol);
+    const data = await binance.bookTickers(this.symbol)
     return {
       symbol: data.symbol,
       bidPrice: parseFloat(data.bidPrice),
       bidQty: parseFloat(data.bidQty),
       askPrice: parseFloat(data.askPrice),
       askQty: parseFloat(data.askQty),
-    };
+    }
   }
 
-  async limitOrder(input: LimitOrderInput): Promise<Order | null> {
-    console.log(`Trying to ${input.orderType}: ${this.symbol} qty ${input.quantity} price ${input.price}`);
-    
-    const { quantity , price } = this.pression(input.quantity, input.price);
-    
-    console.log(`Trying to ${input.orderType}: ${this.symbol} qty ${quantity} price ${price} `);
+  async limitOrder(input: LimitOrderInput): Promise<EngineResponse> {
 
-    if (quantity <= 0 || price <= 0) return null;
+    const { quantity, price } = this.pression(input.quantity, input.price)
+
+    logger(`Trying to ${input.orderType}: ${this.symbol} qty ${quantity} price ${price} `)
+
+    if (quantity <= 0) throw new BotError(1001)
+    if (price <= 0) throw new BotError(1002)
 
     try {
+      let order
 
       switch (input.orderType) {
         case LimitOrderType.Buy: {
-          const data = await binance.buy(this.symbol, quantity, price);
-          return new Order(this.symbol, data);
+          const data = await binance.buy(this.symbol, quantity, price)
+          order = new Order(this.symbol, data)
+          break
         }
         case LimitOrderType.Sell: {
-          const data = await binance.sell(this.symbol, quantity, price);
-          return new Order(this.symbol, data);
+          const data = await binance.sell(this.symbol, quantity, price)
+          order = new Order(this.symbol, data)
+          break
         }
-        default:
-          return null;
+        default: {
+          throw new BotError(1000, {
+            recivedType: `Unknown order type: ${input.orderType}`,
+          })
+        }
       }
-      
+
+      return {
+        success: true,
+        data: order,
+      }
     } catch (e: any) {
-      const err = JSON.parse(e.body as string);
-      console.error(`limitOrder: [${err.code}] - ${err.msg}`);
+      return {
+        success: false,
+        error: e instanceof BotError ? e : new BotError(404, { detail: e.message }),
+      }
     }
-    return null;
   }
 }
