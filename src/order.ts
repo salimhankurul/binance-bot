@@ -1,10 +1,13 @@
+import Binance from 'node-binance-api'
 import { OrderData } from './Types/order'
 import { EngineResponse } from './Types/engine'
 import { BotError } from './Utils/errors'
-import { APIKEY, APISECRET } from './env'
 import { logger } from './Utils/logger'
 
-const Binance = require('node-binance-api')
+import * as dotenv from 'dotenv'
+dotenv.config()
+
+const { APIKEY, APISECRET } = process.env
 
 const binance = new Binance().options({
   APIKEY,

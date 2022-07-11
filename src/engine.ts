@@ -1,12 +1,15 @@
-import { Balance, Ticker } from './Types/common'
 import { LimitOrderType, LimitOrderInput } from './Types/order'
 import { EnginePressions, EngineSymbols, EngineInitParams, EngineResponse } from './Types/engine'
 
 import { handlePression } from './Utils/utils'
 import { logger } from './Utils/logger'
 import { BotError } from './Utils/errors'
-import { APIKEY, APISECRET } from './env'
 import { Order } from './order'
+
+import * as dotenv from 'dotenv'
+dotenv.config()
+
+const { APIKEY, APISECRET } = process.env
 
 const Binance = require('node-binance-api')
 
