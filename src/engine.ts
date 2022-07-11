@@ -41,29 +41,53 @@ export class Engine {
     return bal / price
   }
 
-  async balance(symbol: string): Promise<Balance> {
-    const data = await binance.balance()
-    const target = data[symbol]
-    return {
-      symbol: symbol,
-      available: parseFloat(target.available),
-      onOrder: parseFloat(target.onOrder),
+  async balance(symbol: string): Promise<EngineResponse> {
+    try {
+      const data = await binance.balance()
+      const target = data[symbol]
+      return {
+        success: true,
+        data: {
+          symbol: symbol,
+          available: parseFloat(target.available),
+          onOrder: parseFloat(target.onOrder),
+        },
+      }
+    } catch (e: any) {
+      return {
+        success: false,
+        error: e instanceof BotError ? e : new BotError(404, { detail: e.message }),
+      }
     }
   }
 
-  async getPrice(): Promise<number> {
-    const data = await binance.prices(this.symbol)
-    return parseFloat(data[this.symbol])
+  async getPrice(): Promise<EngineResponse> {
+    try {
+      const data = await binance.prices(this.symbol)
+      return {
+        success: true,
+        data: parseFloat(data[this.symbol]),
+      }
+    } catch (e: any) {
+      return {
+        success: false,
+        error: e instanceof BotError ? e : new BotError(404, { detail: e.message }),
+      }
+    }
   }
 
-  async getTickers(): Promise<Ticker> {
-    const data = await binance.bookTickers(this.symbol)
-    return {
-      symbol: data.symbol,
-      bidPrice: parseFloat(data.bidPrice),
-      bidQty: parseFloat(data.bidQty),
-      askPrice: parseFloat(data.askPrice),
-      askQty: parseFloat(data.askQty),
+  async getTickers(): Promise<EngineResponse> {
+    try {
+      const data = await binance.bookTickers(this.symbol)
+      return {
+        success: true,
+        data: { symbol: data.symbol, bidPrice: parseFloat(data.bidPrice), bidQty: parseFloat(data.bidQty), askPrice: parseFloat(data.askPrice), askQty: parseFloat(data.askQty) },
+      }
+    } catch (e: any) {
+      return {
+        success: false,
+        error: e instanceof BotError ? e : new BotError(404, { detail: e.message }),
+      }
     }
   }
 

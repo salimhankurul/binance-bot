@@ -1,4 +1,6 @@
 import { OrderData } from './Types/order'
+import { EngineResponse } from './Types/engine'
+import { BotError } from './Utils/errors'
 import { APIKEY, APISECRET } from './env'
 import { logger } from './Utils/logger'
 
@@ -51,27 +53,35 @@ export class Order {
     return timeLeft <= 0
   }
 
-  async cancel(): Promise<boolean> {
-    console.log(`Order::Cancel:: ${this.data.orderId} `)
+  async cancel(): Promise<EngineResponse> {
+    logger(`Order::Cancel:: ${this.data.orderId} `)
     try {
       this.data = await binance.cancel(this.symbol, this.data.orderId)
-      return true
+      return {
+        success: true,
+        data: this.data,
+      }
     } catch (e: any) {
-      const err = JSON.parse(e.body as string)
-      console.error(`Order::Cancel:: [${err.code}] - ${err.msg}`)
+      return {
+        success: false,
+        error: e instanceof BotError ? e : new BotError(404, { detail: e.message }),
+      }
     }
-    return false
   }
 
-  async updateStatus(): Promise<boolean> {
-    console.log(`Order::updateStatus:: ${this.data.orderId} `)
+  async updateStatus(): Promise<EngineResponse> {
+    logger(`Order::updateStatus:: ${this.data.orderId} `)
     try {
       this.data = await binance.orderStatus(this.symbol, this.data.orderId)
-      return true
+      return {
+        success: true,
+        data: this.data,
+      }
     } catch (e: any) {
-      const err = JSON.parse(e.body as string)
-      console.error(`Order::updateStatus:: [${err.code}] - ${err.msg}`)
+      return {
+        success: false,
+        error: e instanceof BotError ? e : new BotError(404, { detail: e.message }),
+      }
     }
-    return false
   }
 }

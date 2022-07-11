@@ -1,4 +1,3 @@
-
 export interface OrderData {
     symbol: string;
     orderId: number;
